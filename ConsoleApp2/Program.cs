@@ -22,18 +22,20 @@ namespace ConsoleApp2
                 return;
             }*/
 
-            excel.Application excelApp = new excel.Application(); //Студенты
-            //excel.Application excelApp2 = new excel.Application();
+           
+            File.Copy(args[1], Path.Combine(args[1], "..", "NewFile.doc"),true);
 
+            excel.Application excelApp = new excel.Application(); //Студенты
+            word.Application wordApp = new word.Application();
+
+           
 
             excel.Workbook workbook = excelApp.Workbooks.Open(args[0],ReadOnly:true);
-            //excel.Workbook workbook2 = excelApp.Workbooks.Open(args[1], ReadOnly: true);
+            word.Document doc = wordApp.Documents.Open(Path.Combine(args[1],"..","NewFile.doc"));
 
             excel.Worksheet worksheet = workbook.Sheets[1];
             excel.Range excelRange = worksheet.UsedRange;
 
-            //excel.Worksheet worksheet2 = workbook2.Sheets[1];
-            //excel.Range excelPractice = worksheet2.UsedRange;
 
             Dictionary<String, HashSet<String>> contracts = new Dictionary<string, HashSet<string>>(); //словарь ключ-пара <город,договоры>
             Dictionary<String, List<Student>> dict = new Dictionary<string, List<Student>>(); //словарь ключ-пара <город,список студентов>
@@ -83,11 +85,30 @@ namespace ConsoleApp2
                 Console.Out.Write("\n");
             }
 
+
             
-           
+
+            doc.Save();
+
+
+            workbook.Close();
+            excelApp.Application.Quit();
+
+            doc.Close();
+            wordApp.Application.Quit();
+
 
             Console.In.Read();
             
+
+
+        }
+
+        public static void ReplaceWord(string textToReplace,string text,word.Document wordDoc) // заменяет textToReplace на text в файле wordDoc
+        {
+            var range = wordDoc.Content;
+            range.Find.ClearFormatting();
+            range.Find.Execute(FindText: textToReplace,ReplaceWith:text);
         }
 
         
