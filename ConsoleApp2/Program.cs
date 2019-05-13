@@ -23,7 +23,7 @@ namespace ConsoleApp2
             }*/
 
            
-            File.Copy(args[1], Path.Combine(args[1], "..", "NewFile.doc"),true);
+            
 
             excel.Application excelApp = new excel.Application(); //Студенты
             word.Application wordApp = new word.Application();
@@ -31,7 +31,7 @@ namespace ConsoleApp2
            
 
             excel.Workbook workbook = excelApp.Workbooks.Open(args[0],ReadOnly:true);
-            word.Document doc = wordApp.Documents.Open(Path.Combine(args[1],"..","NewFile.doc"));
+            word.Document doc = wordApp.Documents.Open(Path.Combine(args[1],"..","Karasuk.doc"));
 
             excel.Worksheet worksheet = workbook.Sheets[1];
             excel.Range excelRange = worksheet.UsedRange;
@@ -39,7 +39,7 @@ namespace ConsoleApp2
 
             Dictionary<String, HashSet<String>> contracts = new Dictionary<string, HashSet<string>>(); //словарь ключ-пара <город,договоры>
             Dictionary<String, List<Student>> dict = new Dictionary<string, List<Student>>(); //словарь ключ-пара <город,список студентов>
-            Dictionary<String, String> address = new Dictionary<string, string>(); //адреса назначения 
+            Dictionary<String, String> address = new Dictionary<string, string>();//адреса назначения <город,адрес>
 
             int index = 1;
             
@@ -52,11 +52,11 @@ namespace ConsoleApp2
                     student.Group = excelRange.Cells[index, 2].Value2.ToString();
                     student.Faculty = excelRange.Cells[index, 3].Value2.ToString();
                     student.Course = excelRange.Cells[index, 4].Value2.ToString();    
-                    student.City = excelRange.Cells[index, 5].Value2.ToString();
                     student.Contract = excelRange.Cells[index, 6].Value2.ToString();
-                    student.Address = excelRange.Cells[index, 7].Value2.ToString();
 
                     String city = excelRange.Cells[index, 5].Value2.ToString();
+                    String addr = excelRange.Cells[index, 7].Value2.ToString();
+
                     if (dict.ContainsKey(city))
                     {
                         dict[city].Add(student);
@@ -66,26 +66,49 @@ namespace ConsoleApp2
                     {
                         dict.Add(city, new List<Student>() { student });
                         contracts.Add(city,new HashSet<string>() { student.Contract});
+                        address.Add(city,addr);
                     }
                 }
 
                 index++;
             }
 
-            
-            foreach(KeyValuePair<String, List<Student>> pair in dict)
+
+            /*
+            foreach(KeyValuePair<String,String> pair in address)
             {
-                Console.Out.WriteLine("====="+pair.Key+"=====");
-                
-                foreach(Student str in pair.Value)
+                Console.WriteLine(ToWhom(pair.Key,GetHead(pair.Value)));
+            }
+            */
+            int k = 1;
+            foreach(KeyValuePair<string,List<Student>>pair in dict)
+            {
+                if (File.Exists(Path.Combine(args[1], "..", k.ToString() + ".doc")))
                 {
-                    Console.Out.WriteLine(str.Name+"  "+str.Group);
+                    try
+                    {
+                        File.Delete(Path.Combine(args[1], "..", k.ToString() + ".doc"));
+                    }
+                    catch(Exception e)
+                    {
+                        Console.WriteLine(e.Message);
+                    }
                 }
 
-                Console.Out.Write("\n");
+                try
+                {
+                    File.Copy(args[1], Path.Combine(args[1], "..", k.ToString() + ".doc"), true);
+                }
+                catch(Exception e)
+                {
+                    Console.WriteLine(e.Message);
+                }
+                
+                
+                k++;
             }
 
-
+            
             
 
             doc.Save();
@@ -104,13 +127,44 @@ namespace ConsoleApp2
 
         }
 
-        public static void ReplaceWord(string textToReplace,string text,word.Document wordDoc) // заменяет textToReplace на text в файле wordDoc
+        public static void ReplaceWord(string textToReplace,string text,word.Document wordDoc,word.WdParagraphAlignment alignment) // заменяет textToReplace на text в файле wordDoc
         {
             var range = wordDoc.Content;
             range.Find.ClearFormatting();
+            range.Font.Name = "Times New Roman";
+            range.ParagraphFormat.Alignment = alignment;
             range.Find.Execute(FindText: textToReplace,ReplaceWith:text);
         }
 
-        
+        public static string GetHead(string address)
+        {
+            string result = address;
+            int lastDigit = 0;
+            for (int i=0;i<result.Length;i++)
+            {
+                if (char.IsDigit(result[i]) || result[i].Equals(','))
+                {
+                    lastDigit = i;
+                }
+            }
+
+            if (result[lastDigit + 1].Equals(','))
+                lastDigit++;
+
+            result = result.Substring(lastDigit + 1).Trim();
+
+            return result;
+        }
+
+        public static string ToWhom(string city,string address)
+        {
+            string[] vs = address.Split(' ');
+            ArraySegment<string> segment = new ArraySegment<string>(vs,0,vs.Length-2);
+            string result = string.Join(" ",segment);
+
+            result += " " + city;
+
+            return result;
+        }
     }
 }

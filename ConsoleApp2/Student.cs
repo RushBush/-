@@ -12,17 +12,16 @@ namespace ConsoleApp2
         public string Group { get; set; }
         public string Course { get; set; }
         public string Faculty { get; set; }
-        public string City { get; set; }
-        public string Address { get; set; }
         public string Contract { get; set; }
 
         public string ShortName()
         {
-            String[] name = this.Name.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
-            String result;
+            string[] name = this.Name.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
+            string result;
 
             result = name[0]+" "+name[1][0]+"."+name[2][0]+".";
             return result;
         }
+
     }
 }
