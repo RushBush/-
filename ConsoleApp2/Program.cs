@@ -18,10 +18,10 @@ namespace ConsoleApp2
             
             if (args.Length!=3)
             {
-                Console.Out.WriteLine("Неверно введены данные\nИспользование: programName <excelFile1> <excelFile2> <wordFile>");
+                Console.Out.WriteLine("Неверно введены данные\nИспользование: programName <excelFile1> <wordFile> <excelFile2>");
                 Console.Out.WriteLine("<excelFile1> - файл, содержащий список студентов");
-                Console.Out.WriteLine("<excelFile2> - файл, содержащий описание и время практик");
-                Console.Out.WriteLine("<wordFile> - шаблон для формирования писем\n\n\n");
+                Console.Out.WriteLine("<wordFile> -шаблон для формирования писем");
+                Console.Out.WriteLine("<excelFile2> - файл, содержащий описание и время практик\n\n\n");
 
                 return;
             }
@@ -203,8 +203,9 @@ namespace ConsoleApp2
                 string name = string.Join(" ", segment);
                 ReplaceWord("{ToWhom}", name, doc);
 
-                Console.WriteLine("Введите имя и отчество: " + name + "\n");
+                Console.WriteLine("Введите имя и отчество: " + name);
                 string secondName = Console.ReadLine();
+                Console.WriteLine("\n");
                 string genre = secondName[secondName.Length - 1].Equals('ч') ? "Уважаемый" : "Уважаемая";
 
                 ReplaceWord("{ToWhom2}", genre + " " + secondName, doc);
