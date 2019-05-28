@@ -15,13 +15,16 @@ namespace ConsoleApp2
     {
         static void Main(string[] args)
         {
-            /*
+            
             if (args.Length!=3)
             {
-                Console.Out.WriteLine("Usage: ProgramName  ExcelFileWithStudents ExcelFileWithTime DocFile");
+                Console.Out.WriteLine("Неверно введены данные\nИспользование: programName <excelFile1> <excelFile2> <wordFile>");
+                Console.Out.WriteLine("<excelFile1> - файл, содержащий список студентов");
+                Console.Out.WriteLine("<excelFile2> - файл, содержащий описание и время практик");
+                Console.Out.WriteLine("<wordFile> - шаблон для формирования писем\n\n\n");
 
                 return;
-            }*/
+            }
 
             Dictionary<String, HashSet<String>> contracts = new Dictionary<string, HashSet<string>>(); //словарь ключ-пара <город,договоры>
             Dictionary<String, String> address = new Dictionary<string, string>();//адреса назначения <город,адрес>
@@ -68,21 +71,10 @@ namespace ConsoleApp2
                 index++;
             }
 
-            workbookDir.Close();
-            excelAppDir.Quit();
-            /*
-            foreach (KeyValuePair<Tuple<string, int>, HashSet<Tuple<string, int>>> pair in course)
-            {
-                Console.WriteLine(pair.Key.Item1 + " " + pair.Key.Item2);
-                Console.WriteLine("=====================================");
-                foreach (Tuple<string, int> tuple in pair.Value)
-                {
-                    Console.WriteLine(tuple.Item1 + " " + tuple.Item2);
-                }
+            workbookDir.Close(); // закрытие "книги" excel
+            excelAppDir.Quit(); // завершение процесса excel
+            
 
-                Console.WriteLine();
-            }
-            */
             index = 1;
 
             excel.Application excelApp = new excel.Application();
@@ -96,28 +88,19 @@ namespace ConsoleApp2
             {
                 if (excelRange.Cells[index, 1].Value2 != null && excelRange.Cells[index, 1].Value2[0]!='2')
                 {
-                    /*
-                    Student student = new Student();
-                    student.Name = excelRange.Cells[index, 1].Value2.ToString();
-                    student.Group = excelRange.Cells[index, 2].Value2.ToString();
-                    student.Faculty = excelRange.Cells[index, 3].Value2.ToString();
-                    student.Course = excelRange.Cells[index, 4].Value2.ToString();    
-                    student.Contract = excelRange.Cells[index, 6].Value2.ToString();
-
-                    */
                     string name = excelRange.Cells[index, 1].Value2.ToString();
-                    string city = excelRange.Cells[index, 5].Value2.ToString();
-                    string addr = excelRange.Cells[index, 7].Value2.ToString();
-                    string contract = excelRange.Cells[index, 6].Value2.ToString();
                     string faculty = excelRange.Cells[index, 3].Value2.ToString();
+                    string city = excelRange.Cells[index, 5].Value2.ToString();
+                    string contract = excelRange.Cells[index, 6].Value2.ToString();
+                    string addr = excelRange.Cells[index, 7].Value2.ToString();
 
-                    if (course.ContainsKey(Tuple.Create(faculty, CourseNum))) // есть ли у студента практика
+                    if (course.ContainsKey(Tuple.Create(faculty, CourseNum))) // есть ли у студента практика,проверка по направлению и курсу
                     {
                         if (address.ContainsKey(city)) //есть ли город в списке
                         {
-                            contracts[city].Add(contract);
+                            contracts[city].Add(contract); //Город есть => добавляем контракт студента
 
-                            if (direct[city].ContainsKey(faculty))
+                            if (direct[city].ContainsKey(faculty)) //содержит список 
                             {
                                 direct[city][faculty] = String.Join(", ", direct[city][faculty].ToString(), ShortName(name));
                             }
@@ -135,7 +118,6 @@ namespace ConsoleApp2
 
                                 if (practice[city].ContainsKey(practiceInfo))
                                 {
-                                    //если есть практика
                                     practice[city][practiceInfo] = String.Join(", ", practice[city][practiceInfo], ShortName(name));
                                 }
                                 else
@@ -159,7 +141,6 @@ namespace ConsoleApp2
 
                                 if (practice[city].ContainsKey(practiceInfo))
                                 {
-                                    //если есть практика
                                     practice[city][practiceInfo] = String.Join(", ", practice[city][practiceInfo], ShortName(name));
                                 }
                                 else
@@ -179,26 +160,7 @@ namespace ConsoleApp2
 
                 index++;
             }
-            /*
-            foreach(KeyValuePair<string,Dictionary<string,string>> pair in direct)
-            {
-                Console.WriteLine(pair.Key + "  =======");
-                foreach(KeyValuePair<string,string> newPair in pair.Value)
-                {
-                    Console.WriteLine(newPair.Key+"  "+newPair.Value);
-                }
-            }*/
 
-            foreach (KeyValuePair< String, Dictionary<String, String>> pair in practice)
-            {
-                Console.WriteLine(pair.Key + "=====");
-
-
-                foreach (KeyValuePair<String,String> pair2 in pair.Value)
-                {
-                    Console.WriteLine(pair2.Key + "  " + pair2.Value);
-                }
-            }
 
             workbook.Close();
             excelApp.Quit();
@@ -207,20 +169,16 @@ namespace ConsoleApp2
             int k = 1;
             foreach (KeyValuePair<string, string> pair in address)
             {
-                if (k == 3)
-                    break;
-
-                if (File.Exists(Path.Combine(args[1], "..", k.ToString() + ".doc")))
+                
+                try
                 {
-                    try
-                    {
-                        File.Delete(Path.Combine(args[1], "..", k.ToString() + ".doc"));
-                    }
-                    catch (Exception e)
-                    {
-                        Console.WriteLine(e.Message);
-                    }
+                    File.Delete(Path.Combine(args[1], "..", k.ToString() + ".doc"));
                 }
+                catch (Exception e)
+                {
+                    Console.WriteLine(e.Message);
+                }
+                
 
                 try
                 {
@@ -235,14 +193,17 @@ namespace ConsoleApp2
                 word.Document doc = wordApp.Documents.Open(Path.Combine(args[1], "..", k.ToString() + ".doc"));
 
                 ReplaceWord("{Where}", ToWhom(pair.Key, GetHead(address[pair.Key])), doc);
+                ReplaceWord("{Address}", GetAddress(address[pair.Key]), doc);
 
                 string head = GetHead(address[pair.Key]);
                 string[] names = head.Split(' ');
                 ArraySegment<string> segment = new ArraySegment<string>(names, names.Length - 2, 2);
+                
+
                 string name = string.Join(" ", segment);
                 ReplaceWord("{ToWhom}", name, doc);
 
-                Console.WriteLine("Введите имя и отчество: " + name);
+                Console.WriteLine("Введите имя и отчество: " + name + "\n");
                 string secondName = Console.ReadLine();
                 string genre = secondName[secondName.Length - 1].Equals('ч') ? "Уважаемый" : "Уважаемая";
 
@@ -284,33 +245,20 @@ namespace ConsoleApp2
 
                     rowIndex++;
                 }
-
-
                 doc.Save();
                 doc.Close();
                 wordApp.Quit();
 
-                
-                    
-                
 
                 k++;
             }
 
-            
-
-
-
-
-            Console.In.Read();
-            
-
-
+            Console.In.Read();        
         }
 
 
-
-        public static void ReplaceWord(string textToReplace,string text,word.Document wordDoc) // заменяет textToReplace на text в файле wordDoc
+        // заменяет textToReplace на text в файле wordDoc
+        public static void ReplaceWord(string textToReplace,string text,word.Document wordDoc) 
         {
             var range = wordDoc.Content;
             range.Find.ClearFormatting();
@@ -381,6 +329,19 @@ namespace ConsoleApp2
         public static int GetCourse(int startYear)
         {
             return (int.Parse(DateTime.Now.Year.ToString())-startYear);
+        }
+
+        public static string GetAddress(string address)
+        {
+            string[] addr = address.Split(',');
+            Array.Reverse(addr);
+            addr = addr.Where(x => x != addr[0]).ToArray();
+
+            string swap = addr[0];
+            addr[0] = addr[1];
+            addr[1] = swap;
+
+            return String.Join(",", addr);
         }
     }
 }
